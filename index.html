@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>አኩኩሉ ክራሽ ጨዋታ</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .game-container {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 400px;
+            margin: auto;
+            box-shadow: 0px 10px 25px rgba(0,0,0,0.5);
+            border: 3px solid #ffcc00; /* የባህል ቢጫ ቀለም */
+        }
+        .multiplier {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #4cd137;
+            margin: 20px 0;
+            text-shadow: 0 0 15px #4cd137;
+        }
+        .multiplier.crashed {
+            color: #e84118;
+            text-shadow: 0 0 15px #e84118;
+        }
+        .btn {
+            background-color: #ffcc00;
+            color: black;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .btn:disabled { background-color: #7f8c8d; cursor: not-allowed; }
+        .btn-cashout { background-color: #4cd137; color: white; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <h2>🦁 አኩኩሉ ጨዋታ</h2>
+    <p>የቴሌብር ሂሳብዎ፦ <span id="balance">500</span> ብር</p>
+    
+    <div id="status">አኩኩሉ ሊቆጥር ነው... ውራርድ ያስገቡ!</div>
+    <div class="multiplier" id="multiplier_view">1.00x</div>
+    
+    <div id="setup_panel">
+        <input type="number" id="bet_amount" value="50" min="10" style="padding: 10px; width: 80%; font-size: 1rem; margin-bottom: 10px; text-align: center;"><br>
+        <button class="btn" id="start_btn" onclick="startGame()">ውርርድ አስይዝ (Bet)</button>
+    </div>
+    
+    <button class="btn btn-cashout" id="cashout_btn" onclick="cashOut()">ተገኘሁ! (Cash Out)</button>
+</div>
+
+<script>
+    let currentMultiplier = 1.00;
+    let gameInterval;
+    let isPlaying = false;
+    let crashPoint = 0;
+
+    function startGame() {
+        let bet = parseFloat(document.getElementById('bet_amount').value);
+        let balance = parseFloat(document.getElementById('balance').text);
+        
+        // ከPython Backend የሚመጣውን ክራሽ ፖይንት በግምት ለመፈተሽ (እውነተኛውን በኋላ እናገናኘዋለን)
+        crashPoint = (Math.random() * 5 + 1).toFixed(2); 
+        
+        isPlaying = true;
+        currentMultiplier = 1.00;
+        document.getElementById('setup_panel').style.display = 'none';
+        document.getElementById('cashout_btn').style.display = 'block';
+        document.getElementById('status').innerText = "🏃‍♂️ መደበቅ ጀምረዋል! ፍጠኑ...";
+        
+        gameInterval = setInterval(() => {
+            currentMultiplier += 0.02;
+            document.getElementById('multiplier_view').innerText = currentMultiplier.toFixed(2) + "x";
+            
+            if (currentMultiplier >= crashPoint) {
+                clearInterval(gameInterval);
+                document.getElementById('multiplier_view').className = "multiplier crashed";
+                document.getElementById('multiplier_view').innerText = "አልበላሁም! (" + crashPoint + "x)";
+                resetGame("❌ ተበሉ! አኩኩሉ አግኝቶዎታል።");
+            }
+        }, 100);
+    }
+
+    function cashOut() {
+        if(!isPlaying) return;
+        clearInterval(gameInterval);
+        let bet = parseFloat(document.getElementById('bet_amount').value);
+        let winAmount = (bet * currentMultiplier).toFixed(2);
+        resetGame("🎉 አሸንፈዋል! " + winAmount + " ብር አገኙ!");
+    }
+
+    function resetGame(msg) {
+        isPlaying = false;
+        document.getElementById('status').innerText = msg;
+        document.getElementById('setup_panel').style.display = 'block';
+        document.getElementById('cashout_btn').style.display = 'none';
+        setTimeout(() => {
+            document.getElementById('multiplier_view').className = "multiplier";
+            document.getElementById('multiplier_view').innerText = "1.00x";
+        }, 3000);
+    }
+</script>
+</body>
+</html>
