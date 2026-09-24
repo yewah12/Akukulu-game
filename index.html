@@ -160,11 +160,36 @@
     let isPlaying = false;
     let crashPoint = 0;
     let balance = 939.74;
+    
+    // በስልኩ ሲስተም ውስጥ ድምፅ የመፍጠሪያ ዘዴ (Web Audio Context)
+    let audioCtx = null;
 
-    // የድምፅ ፋይሎች
-    const tickSound = new Audio('https://mixkit.co');
-    const winSound = new Audio('https://mixkit.co');
-    const crashSound = new Audio('https://mixkit.co');
+    function playSystemSound(frequency, type, duration) {
+        try {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            let oscillator = audioCtx.createOscillator();
+            let gainNode = audioCtx.createGain();
+            
+            oscillator.type = type;
+            oscillator.frequency.value = frequency;
+            
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + duration);
+        } catch(e) {
+            console.log("ድምፅ ማጫወት አልተቻለም");
+        }
+    }
 
     function adjustBet(val) {
         let amt = document.getElementById('bet_amount');
@@ -178,16 +203,11 @@
             alert("ይቅርታ፣ በቂ የቴሌብር ሂሳብ የለዎትም!");
             return;
         }
-
-        // የብሮውዘርን የድምፅ እገዳ ለመስበር ድምፆቹን እዚህ ላይ እናነቃቸዋለን
-        tickSound.play().then(() => { tickSound.pause(); tickSound.currentTime = 0; }).catch(() => {});
-        winSound.play().then(() => { winSound.pause(); winSound.currentTime = 0; }).catch(() => {});
-        crashSound.play().then(() => { crashSound.pause(); crashSound.currentTime = 0; }).catch(() => {});
         
         document.getElementById('status').innerText = "🔄 ከአልጎሪዝም ሰርቨር ጋር እየተገናኘ ነው...";
         
         try {
-            // እዚህ ላይ የእርስዎን የሬንደር ሊንክ መተካትዎን ያረጋግጡ
+            // *** እዚህ ላይ የራስህን የሬንደር ሊንክ መተካትህን አረጋግጥ ***
             let response = await fetch('https://onrender.com');
             let data = await response.json();
             crashPoint = data.crash_point;
@@ -209,12 +229,13 @@
             currentMultiplier += 0.02;
             document.getElementById('multiplier_view').innerText = currentMultiplier.toFixed(2) + "x";
             
-            // የቲከር ድምፅ
-            tickSound.play().catch(() => {});
+            // የቁጥር ማደጊያ የ"ቲክ" ድምፅ (አጭር ቀጭን ድምፅ)
+            playSystemSound(600, 'sine', 0.05);
 
             if (currentMultiplier >= crashPoint) {
                 clearInterval(gameInterval);
-                crashSound.play().catch(() => {});
+                // የመበያ ድምፅ (ጎርናና የፍንዳታ ድምፅ)
+                playSystemSound(150, 'sawtooth', 0.4);
                 document.getElementById('multiplier_view').className = "multiplier crashed";
                 document.getElementById('multiplier_view').innerText = "አልበላሁም! (" + crashPoint + "x)";
                 resetGame("❌ አኩኩሉ አግኝቶዎታል! ተበሉ ግዴለም።");
@@ -225,7 +246,10 @@
     function cashOut() {
         if(!isPlaying) return;
         clearInterval(gameInterval);
-        winSound.play().catch(() => {});
+        // የማሸነፊያ ድምፅ (ደስ የሚል የሳንቲም ድምፅ)
+        playSystemSound(1200, 'sine', 0.1);
+        setTimeout(() => playSystemSound(1500, 'sine', 0.15), 80);
+        
         let bet = parseFloat(document.getElementById('bet_amount').value);
         let winAmount = bet * currentMultiplier;
         balance += winAmount;
@@ -242,7 +266,7 @@
     }
 
     function updateLiveBets() {
-        const names = ["ሮቤል", "ቅድስት", "ዮናታን", "ፅዮን", "በረከት", "በረት", "ዮናታን"];
+        const names = ["ሮቤል", "ቅድስት", "ዮናታን", "ፅዮን", "በረከት", "ሳራ", "ዳዊት"];
         let html = "";
         for(let i = 0; i < 3; i++) {
             let rName = names[Math.floor(Math.random() * names.length)];
@@ -250,17 +274,4 @@
             let rWin = Math.random() > 0.5;
             let mult = (Math.random() * 2 + 1.1).toFixed(2);
             
-            // እውነተኛውን የጽሑፍ አሰካክ እዚህ ላይ አስተካክለነዋል
             if (rWin) {
-                html += '<div class="bet-row"><span class="bet-user">' + rName + '</span> <span>' + rBet + ' ብር ያስያዘ</span> <span class="bet-status-win">' + mult + 'x በላ 🎉</span></div>';
-            } else {
-                html += '<div class="bet-row"><span class="bet-user">' + rName + '</span> <span>' + rBet + ' ብር ያስያዘ</span> <span style="color: #ff3f34;">ተበላ ❌</span></div>';
-            }
-        }
-        document.getElementById('live_bets_list').innerHTML = html;
-    }
-    
-    updateLiveBets();
-</script>
-</body>
-</html>
