@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="am">
 <head>
     <meta charset="UTF-8">
@@ -156,13 +156,12 @@
     </div>
 </div>
 
-<!-- የቴሌግራም ሲስተም ድምፅ እና ንዝረትን ማገናኛ ስክሪፕት -->
 <script src="https://telegram.org"></script>
 <script>
     const tg = window.Telegram.WebApp;
     if (tg) {
         tg.ready();
-        tg.expand(); // ጨዋታው በስክሪኑ ሙሉ እንዲሆን
+        tg.expand();
     }
 
     let currentMultiplier = 1.00;
@@ -199,10 +198,12 @@
         document.getElementById('status').innerText = "🔄 ከአልጎሪዝም ሰርቨር ጋር እየተገናኘ ነው...";
         
         try {
+            // *** ስህተት እንዳይፈጠር እዚህ ጋር የእርስዎን ሙሉ የሬንደር ሊንክ በደንብ ያረጋግጡ ***
             let response = await fetch('https://onrender.com');
             let data = await response.json();
             crashPoint = data.crash_point;
         } catch (error) {
+            // ሰርቨሩ ምላሽ ባይሰጥ እንኳ ጨዋታው እንዳይቆም በራሱ ቁጥር ያመነጫል
             crashPoint = (Math.random() * 4 + 1.1).toFixed(2); 
         }
         
@@ -227,7 +228,7 @@
                 playSoundEffect('crash');
                 document.getElementById('multiplier_view').className = "multiplier crashed";
                 document.getElementById('multiplier_view').innerText = "አልበላሁም! (" + crashPoint + "x)";
-                resetGame("❌ አኩኩሉ አግኝቶዎታል! ተበሉ ግዴለም።");
+                resetGame("❌ 아ኩኩሉ አግኝቶዎታል! ተበሉ ግዴለም።");
             }
         }, 80);
     }
