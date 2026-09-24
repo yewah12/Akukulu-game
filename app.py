@@ -1,7 +1,6 @@
  from flask import Flask, jsonify, request
 import random
 from flask_cors import CORS
-
 app = Flask(__name__)
 CORS(app)  # HTML ገጻችን በቀላሉ እንዲያገኘው ለመፍቀድ
 
