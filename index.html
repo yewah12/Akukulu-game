@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="am">
 <head>
     <meta charset="UTF-8">
@@ -54,11 +54,9 @@
         <button class="btn btn-cashout" id="cashout_btn" onclick="cashOut()">ተገኘሁ! (Cash Out)</button>
     </div>
 
-    <div class="main-wrapper" style="border: none; border-top: 1px solid #444; border-radius: 0;">
-        <div class="live-bets-container">
-            <div class="live-bets-title">👥 የቀጥታ ተጫዋቾች ውርርድ (Live Bets)</div>
-            <div id="live_bets_list"></div>
-        </div>
+    <div class="live-bets-container">
+        <div class="live-bets-title">👥 የቀጥታ ተጫዋቾች ውርርድ (Live Bets)</div>
+        <div id="live_bets_list"></div>
     </div>
 </div>
 
@@ -104,13 +102,8 @@
         isPlaying = true;
         currentMultiplier = 1.00;
         
-        // ጨዋታው ያለምንም ሰርቨር መዘግየት ወዲያውኑ በራሱ እንዲሰራ የማድረጊያ ቀመር
-        let randomFactor = Math.random();
-        if (randomFactor < 0.03) {
-            crashPoint = 1.00; // 3% ዕድል ወዲያውኑ ይበላል
-        } else {
-            crashPoint = (Math.random() * 4 + 1.05).toFixed(2); // ከ 1.05 እስከ 5.00 ማባዣ በግምት
-        }
+        // 100% ራሱን ችሎ የሚሰራ አልጎሪዝም
+        crashPoint = (Math.random() * 4 + 1.05).toFixed(2);
         
         gameInterval = setInterval(() => {
             currentMultiplier += 0.02;
