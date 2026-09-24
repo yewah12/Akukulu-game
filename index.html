@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="am">
 <head>
     <meta charset="UTF-8">
@@ -89,9 +89,7 @@
             transition: 0.2s;
         }
         .btn-bet { background: #ffcc00; color: #000; }
-        .btn-bet:hover { background: #e6b800; }
         .btn-cashout { background: #4cd137; color: #fff; display: none; box-shadow: 0 0 15px rgba(76,209,55,0.4); }
-        .btn-cashout:hover { background: #44bd32; }
         
         .live-bets-container {
             padding: 15px;
@@ -156,29 +154,40 @@
     </div>
 </div>
 
-<script src="https://telegram.org"></script>
 <script>
-    const tg = window.Telegram.WebApp;
-    if (tg) {
-        tg.ready();
-        tg.expand();
-    }
-
     let currentMultiplier = 1.00;
     let gameInterval;
     let isPlaying = false;
     let crashPoint = 0;
     let balance = 939.74;
+    
+    // በስልኩ ሲስተም ውስጥ ድምፅ የመፍጠሪያ ዘዴ (Web Audio Context)
+    let audioCtx = null;
 
-    function playSoundEffect(style) {
+    function playSystemSound(frequency, type, duration) {
         try {
-            if (tg && tg.HapticFeedback) {
-                if (style === 'tick') tg.HapticFeedback.impactOccurred('light');
-                if (style === 'win') tg.HapticFeedback.notificationOccurred('success');
-                if (style === 'crash') tg.HapticFeedback.notificationOccurred('error');
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            let oscillator = audioCtx.createOscillator();
+            let gainNode = audioCtx.createGain();
+            
+            oscillator.type = type;
+            oscillator.frequency.value = frequency;
+            
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + duration);
         } catch(e) {
-            console.log("ድምፅ አልሰራም");
+            console.log("ድምፅ ማጫወት አልተቻለም");
         }
     }
 
@@ -198,12 +207,11 @@
         document.getElementById('status').innerText = "🔄 ከአልጎሪዝም ሰርቨር ጋር እየተገናኘ ነው...";
         
         try {
-            // *** ስህተት እንዳይፈጠር እዚህ ጋር የእርስዎን ሙሉ የሬንደር ሊንክ በደንብ ያረጋግጡ ***
+            // *** እዚህ ላይ የራስህን የሬንደር ሊንክ መተካትህን አረጋግጥ ***
             let response = await fetch('https://onrender.com');
             let data = await response.json();
             crashPoint = data.crash_point;
         } catch (error) {
-            // ሰርቨሩ ምላሽ ባይሰጥ እንኳ ጨዋታው እንዳይቆም በራሱ ቁጥር ያመነጫል
             crashPoint = (Math.random() * 4 + 1.1).toFixed(2); 
         }
         
@@ -221,14 +229,16 @@
             currentMultiplier += 0.02;
             document.getElementById('multiplier_view').innerText = currentMultiplier.toFixed(2) + "x";
             
-            playSoundEffect('tick');
+            // የቁጥር ማደጊያ የ"ቲክ" ድምፅ (አጭር ቀጭን ድምፅ)
+            playSystemSound(600, 'sine', 0.05);
 
             if (currentMultiplier >= crashPoint) {
                 clearInterval(gameInterval);
-                playSoundEffect('crash');
+                // የመበያ ድምፅ (ጎርናና የፍንዳታ ድምፅ)
+                playSystemSound(150, 'sawtooth', 0.4);
                 document.getElementById('multiplier_view').className = "multiplier crashed";
                 document.getElementById('multiplier_view').innerText = "አልበላሁም! (" + crashPoint + "x)";
-                resetGame("❌ 아ኩኩሉ አግኝቶዎታል! ተበሉ ግዴለም።");
+                resetGame("❌ አኩኩሉ አግኝቶዎታል! ተበሉ ግዴለም።");
             }
         }, 80);
     }
@@ -236,7 +246,9 @@
     function cashOut() {
         if(!isPlaying) return;
         clearInterval(gameInterval);
-        playSoundEffect('win');
+        // የማሸነፊያ ድምፅ (ደስ የሚል የሳንቲም ድምፅ)
+        playSystemSound(1200, 'sine', 0.1);
+        setTimeout(() => playSystemSound(1500, 'sine', 0.15), 80);
         
         let bet = parseFloat(document.getElementById('bet_amount').value);
         let winAmount = bet * currentMultiplier;
@@ -263,15 +275,3 @@
             let mult = (Math.random() * 2 + 1.1).toFixed(2);
             
             if (rWin) {
-                html += '<div class="bet-row"><span class="bet-user">' + rName + '</span> <span>' + rBet + ' ብር ያስያዘ</span> <span class="bet-status-win">' + mult + 'x በላ 🎉</span></div>';
-            } else {
-                html += '<div class="bet-row"><span class="bet-user">' + rName + '</span> <span>' + rBet + ' ብር ያስያዘ</span> <span style="color: #ff3f34;">ተበላ ❌</span></div>';
-            }
-        }
-        document.getElementById('live_bets_list').innerHTML = html;
-    }
-    
-    updateLiveBets();
-</script>
-</body>
-</html>
