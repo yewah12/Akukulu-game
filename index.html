@@ -73,7 +73,7 @@
         
         try {
             // በኮምፒውተርዎ ላይ ከሚሰራው የPython API (app.py) እውነተኛ ቁጥር ይጠይቃል
-            let response = await fetch('http://127.0.0');
+            let response = await fetch('https://akukulu-game.onrender.com');
             let data = await response.json();
             crashPoint = data.crash_point; // ከፓይተን የመጣው እውነተኛ ክራሽ ፖይንት
         } catch (error) {
