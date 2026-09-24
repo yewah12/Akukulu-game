@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+ from flask import Flask, jsonify, request
 import random
 from flask_cors import CORS
 
@@ -15,8 +15,8 @@ def generate_crash_point():
     crash_point = int((101 * e - h) / (101 * (e - h)) * 100) / 100
     return max(1.00, crash_point)
 
-# 2. አዲስ የጨዋታ ዙር መጀመሩን ለ HTML የሚነግር API
-@app.route('/start-game', list_methods=['GET'])
+# 2. አዲስ የጨዋታ ዙር መጀመሩን ለ HTML የሚነግር API (የተስተካከለ)
+@app.route('/start-game', methods=['GET'])
 def start_game():
     crash_point = generate_crash_point()
     return jsonify({
@@ -24,11 +24,10 @@ def start_game():
         "crash_point": crash_point
     })
 
-# 3. የቴሌብር ክፍያ ሲግናል መቀበያ (Simulation)
-@app.route('/telebirr-webhook', list_methods=['POST'])
+# 3. የቴሌብር ክፍያ ሲግናል መቀበያ (የተስተካከለ)
+@app.route('/telebirr-webhook', methods=['POST'])
 def telebirr_webhook():
     data = request.json
-    # እዚህ ላይ ከቴሌብር የሚመጣውን የክፍያ ማረጋገጫ ኮድ እንቀበላለን
     print(f"ክፍያ ተቀብለናል፦ {data}")
     return jsonify({"status": "Payment Received"})
 
