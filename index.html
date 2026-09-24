@@ -67,17 +67,19 @@
 </div>
 
 <script>
-    let currentMultiplier = 1.00;
-    let gameInterval;
-    let isPlaying = false;
-    let crashPoint = 0;
-
-    function startGame() {
+       async function startGame() {
         let bet = parseFloat(document.getElementById('bet_amount').value);
-        let balance = parseFloat(document.getElementById('balance').text);
+        document.getElementById('status').innerText = "🔄 ከአልጎሪዝም ሰርቨር ጋር እየተገናኘ ነው...";
         
-        // ከPython Backend የሚመጣውን ክራሽ ፖይንት በግምት ለመፈተሽ (እውነተኛውን በኋላ እናገናኘዋለን)
-        crashPoint = (Math.random() * 5 + 1).toFixed(2); 
+        try {
+            // በኮምፒውተርዎ ላይ ከሚሰራው የPython API (app.py) እውነተኛ ቁጥር ይጠይቃል
+            let response = await fetch('http://127.0.0');
+            let data = await response.json();
+            crashPoint = data.crash_point; // ከፓይተን የመጣው እውነተኛ ክራሽ ፖይንት
+        } catch (error) {
+            console.log("ሰርቨሩ አልተነሳም፣ ወደ መደበኛ ቁጥር ተቀይሯል");
+            crashPoint = (Math.random() * 5 + 1).toFixed(2); 
+        }
         
         isPlaying = true;
         currentMultiplier = 1.00;
@@ -97,6 +99,7 @@
             }
         }, 100);
     }
+
 
     function cashOut() {
         if(!isPlaying) return;
