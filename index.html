@@ -20,9 +20,8 @@
             border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 15px 35px rgba(0,0,0,0.7);
-            border: 2px solid #ffcc00; /* የባህል ወርቃማ ቢጫ */
+            border: 2px solid #ffcc00;
         }
-        /* የጨዋታ አኒሜሽን ስክሪን */
         .game-screen {
             position: relative;
             height: 220px;
@@ -45,14 +44,12 @@
             font-weight: 900;
             color: #4cd137;
             text-shadow: 0 0 20px rgba(76, 209, 55, 0.6);
-            transition: transform 0.1s;
         }
         .multiplier.crashed {
             color: #ff3f34;
             text-shadow: 0 0 20px rgba(255, 63, 52, 0.6);
             animation: shake 0.3s;
         }
-        /* የቁጥጥር ፓነል */
         .control-panel {
             padding: 20px;
             background: #1e1e22;
@@ -92,11 +89,8 @@
             transition: 0.2s;
         }
         .btn-bet { background: #ffcc00; color: #000; }
-        .btn-bet:hover { background: #e6b800; }
         .btn-cashout { background: #4cd137; color: #fff; display: none; box-shadow: 0 0 15px rgba(76,209,55,0.4); }
-        .btn-cashout:hover { background: #44bd32; }
         
-        /* የቀጥታ ውርርድ ሰሌዳ (ማህበራዊ ስሜት ለመስጠት) */
         .live-bets-container {
             padding: 15px;
             background: #252529;
@@ -133,21 +127,19 @@
 <body>
 
 <div class="main-wrapper">
-    <!-- የጨዋታ አኒሜሽን ቦታ -->
     <div class="game-screen">
         <div class="ethio-flag-bar"></div>
         <div id="status" style="font-size: 0.9rem; color: #ffcc00; font-weight: bold; position: absolute; top: 15px;">አኩኩሉ ለመጫወት ውርርድ ያስገቡ!</div>
         <div class="multiplier" id="multiplier_view">1.00x</div>
     </div>
 
-    <!-- የቁጥጥር ቦታ -->
     <div class="control-panel">
-        <div class="balance-box">💰 የቴሌብር ሂሳብ፦ <span id="balance">520.00</span> ብር</div>
+        <div class="balance-box">💰 የቴሌብር ሂሳብ፦ <span id="balance">761.20</span> ብር</div>
         
         <div id="setup_panel">
             <div class="bet-input-group">
                 <button type="button" onclick="adjustBet(-10)" style="padding: 10px; background: #444; color: white; border: none; border-radius: 5px;">-10</button>
-                <input type="number" id="bet_amount" class="bet-input" value="50" min="10">
+                <input type="number" id="bet_amount" class="bet-input" value="60" min="10">
                 <button type="button" onclick="adjustBet(10)" style="padding: 10px; background: #444; color: white; border: none; border-radius: 5px;">+10</button>
             </div>
             <button class="btn btn-bet" id="start_btn" onclick="startGame()">ውርርድ አስይዝ (Bet)</button>
@@ -156,14 +148,9 @@
         <button class="btn btn-cashout" id="cashout_btn" onclick="cashOut()">ተገኘሁ! (Cash Out)</button>
     </div>
 
-    <!-- ማህበራዊ የቀጥታ ውርርድ ሰሌዳ -->
     <div class="live-bets-container">
         <div class="live-bets-title">👥 የቀጥታ ተጫዋቾች ውርርድ (Live Bets)</div>
-        <div id="live_bets_list">
-            <div class="bet-row"><span class="bet-user">ዮናስ K.</span> <span>50 ብር ያስያዘ</span> <span class="bet-status-win">1.85x በላ 🎉</span></div>
-            <div class="bet-row"><span class="bet-user">ሳራ M.</span> <span>100 ብር ያስያዘ</span> <span style="color: #ff3f34;">ተበላ ❌</span></div>
-            <div class="bet-row"><span class="bet-user">ከበደ T.</span> <span>20 ብር ያስያዘ</span> <span class="bet-status-win">2.40x በላ 🎉</span></div>
-        </div>
+        <div id="live_bets_list"></div>
     </div>
 </div>
 
@@ -172,7 +159,12 @@
     let gameInterval;
     let isPlaying = false;
     let crashPoint = 0;
-    let balance = 520.00;
+    let balance = 761.20;
+
+    // ድምፆችን መግለፅ
+    const tickSound = new Audio('https://mixkit.co'); // የቁጥር ማደጊያ ድምፅ
+    const winSound = new Audio('https://mixkit.co');   // የአሸናፊነት እልልታ/ሳንቲም
+    const crashSound = new Audio('https://mixkit.co'); // የአልበላሁም/መበያ ድምፅ
 
     function adjustBet(val) {
         let amt = document.getElementById('bet_amount');
@@ -190,7 +182,6 @@
         document.getElementById('status').innerText = "🔄 ከአልጎሪዝም ሰርቨር ጋር እየተገናኘ ነው...";
         
         try {
-            // *** እዚህ ላይ የራስዎን የሬንደር (Render) ሊንክ መተካትዎን ያረጋግጡ ***
             let response = await fetch('https://onrender.com');
             let data = await response.json();
             crashPoint = data.crash_point;
@@ -212,8 +203,12 @@
             currentMultiplier += 0.02;
             document.getElementById('multiplier_view').innerText = currentMultiplier.toFixed(2) + "x";
             
+            // ቁጥሩ ሲያድግ ሁልጊዜ የ"ቲክ" ድምፅ ያሰማል
+            tickSound.play().catch(() => {});
+
             if (currentMultiplier >= crashPoint) {
                 clearInterval(gameInterval);
+                crashSound.play().catch(() => {}); // መበያ ድምፅ
                 document.getElementById('multiplier_view').className = "multiplier crashed";
                 document.getElementById('multiplier_view').innerText = "አልበላሁም! (" + crashPoint + "x)";
                 resetGame("❌ አኩኩሉ አግኝቶዎታል! ተበሉ ግዴለም።");
@@ -224,6 +219,7 @@
     function cashOut() {
         if(!isPlaying) return;
         clearInterval(gameInterval);
+        winSound.play().catch(() => {}); // የማሸነፊያ ድምፅ
         let bet = parseFloat(document.getElementById('bet_amount').value);
         let winAmount = bet * currentMultiplier;
         balance += winAmount;
@@ -236,12 +232,11 @@
         document.getElementById('status').innerText = msg;
         document.getElementById('setup_panel').style.display = 'block';
         document.getElementById('cashout_btn').style.display = 'none';
-        // የውርርድ ሰሌዳውን በዘፈቀደ ማደስ (Simulation)
         updateLiveBets();
     }
 
     function updateLiveBets() {
-        const names = ["አልማዝ", "ዳዊት", "ፎዚያ", "ቤተልሔም", "ኤልያስ"];
+        const names = ["ሮቤል", "ቅድስት", "ዮናታን", "ፅዮን", "በረከት"];
         let html = "";
         for(let i=0; i<3; i++) {
             let rName = names[Math.floor(Math.random()*names.length)];
@@ -252,6 +247,9 @@
         }
         document.getElementById('live_bets_list').innerHTML = html;
     }
+    
+    // መጀመሪያ ገጹ ሲከፈት ዝርዝሩን ባዶ እንዳይሆን መሙላት
+    updateLiveBets();
 </script>
 </body>
 </html>
