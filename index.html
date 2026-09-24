@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="am">
 <head>
     <meta charset="UTF-8">
@@ -54,9 +54,11 @@
         <button class="btn btn-cashout" id="cashout_btn" onclick="cashOut()">ተገኘሁ! (Cash Out)</button>
     </div>
 
-    <div class="live-bets-container">
-        <div class="live-bets-title">👥 የቀጥታ ተጫዋቾች ውርርድ (Live Bets)</div>
-        <div id="live_bets_list"></div>
+    <div class="main-wrapper" style="border: none; border-top: 1px solid #444; border-radius: 0;">
+        <div class="live-bets-container">
+            <div class="live-bets-title">👥 የቀጥታ ተጫዋቾች ውርርድ (Live Bets)</div>
+            <div id="live_bets_list"></div>
+        </div>
     </div>
 </div>
 
@@ -70,9 +72,6 @@
     let isPlaying = false;
     let crashPoint = 0;
     let balance = 939.74;
-
-    // ⚠️ *** የእርስዎን የሬንደር ሊንክ እዚህ ጋር ብቻ ያስገቡ (መጨረሻው ላይ / ምልክት አይኑረው) ***
-    const MY_SERVER_URL = "https://akukulu-game.onrender.com"; 
 
     function playSoundEffect(style) {
         try {
@@ -90,7 +89,7 @@
         if(newAmt >= 10) amt.value = newAmt;
     }
 
-    async function startGame() {
+    function startGame() {
         let bet = parseFloat(document.getElementById('bet_amount').value);
         if (bet > balance) { alert("ይቅርታ፣ በቂ የቴሌብር ሂሳብ የለዎትም!"); return; }
         
@@ -99,23 +98,19 @@
         document.getElementById('cashout_btn').style.display = 'block';
         document.getElementById('multiplier_view').className = "multiplier";
         
-        isPlaying = true;
-        currentMultiplier = 1.00;
-        crashPoint = (Math.random() * 4 + 1.15).toFixed(2); // Backup ቁጥር (ሰርቨሩ እስኪመጣ ጨዋታው እንዳይቆም)
-
-        // ከሰርቨሩ እውነተኛ ቁጥር ለመቀበል መሞከር
-        try {
-            let response = await fetch(MY_SERVER_URL + '/start-game');
-            if(response.ok) {
-                let data = await response.json();
-                crashPoint = data.crash_point;
-            }
-        } catch (error) {
-            console.log("ሰርቨሩ በጊዜ አልደረሰም፣ በራስ-ሰር እየሰራ ነው");
-        }
-        
         balance -= bet;
         document.getElementById('balance').innerText = balance.toFixed(2);
+        
+        isPlaying = true;
+        currentMultiplier = 1.00;
+        
+        // ጨዋታው ያለምንም ሰርቨር መዘግየት ወዲያውኑ በራሱ እንዲሰራ የማድረጊያ ቀመር
+        let randomFactor = Math.random();
+        if (randomFactor < 0.03) {
+            crashPoint = 1.00; // 3% ዕድል ወዲያውኑ ይበላል
+        } else {
+            crashPoint = (Math.random() * 4 + 1.05).toFixed(2); // ከ 1.05 እስከ 5.00 ማባዣ በግምት
+        }
         
         gameInterval = setInterval(() => {
             currentMultiplier += 0.02;
@@ -126,7 +121,7 @@
                 clearInterval(gameInterval);
                 playSoundEffect('crash');
                 document.getElementById('multiplier_view').className = "multiplier crashed";
-                document.getElementById('multiplier_view').innerText = "አልበላሁም! (" + crashPoint + "x)";
+                document.getElementById('multiplier_view').innerText = "አልበላሁም! (" + crashPoint + ")";
                 resetGame("❌ አኩኩሉ አግኝቶዎታል! ተበሉ ግዴለም።");
             }
         }, 80);
